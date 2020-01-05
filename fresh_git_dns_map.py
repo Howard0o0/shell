@@ -36,8 +36,8 @@ def update_github_com_ip_in_dns_file(new_ip):
 
         with open('/etc/hosts', 'r') as f:
                 for line in f.readlines():
-                        if(line.find('http://github.co') > 0):
-                                line = '%s http://github.co' % (new_ip) + '\n'
+                        if(line.find('http://github.com') > 0):
+                                line = '%s http://github.com' % (new_ip) + '\n'
 
                         file_content_to_write += line
 
