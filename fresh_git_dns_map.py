@@ -1,64 +1,80 @@
 import os
 import re
+import socket
 
-def find_server_ip(ip_search_result):
-        pattern = re.compile(r'Address.*?(\d+\.\d+\.\d+\.\d+)')
-        for line in ip_search_result:
-                match_result = pattern.match(line)
-                if match_result and ('127' not in match_result.group(1)):
-                        # 使用Match获得分组信息
-                        return match_result.group(1)
+os_type = 'windows'
+#os_type = 'linux'
 
 
 def find_github_fastly_net_ip():
-        ip_search_result = os.popen('nslookup github.global.ssl.fastly.Net')
-        return find_server_ip(ip_search_result)
+    ip = socket.gethostbyname("github.global.ssl.fastly.Net")
+    return ip
+
 
 def find_github_com_ip():
-        ip_search_result = os.popen('nslookup github.com')
-        return find_server_ip(ip_search_result)
+    ip = socket.gethostbyname("github.com")
+    return ip
+
 
 def update_github_fastly_net_ip_in_dns_file(new_ip):
-        file_content_to_write = ''
+    file_content_to_write = ''
+    hosts_file = ''
 
-        with open('/etc/hosts', 'r') as f:
-                for line in f.readlines():
-                        if(line.find('http://global-ssl.fastly.Net') > 0):
-                                line = '%s http://global-ssl.fastly.Net' % (new_ip) + '\n'
+    if os_type == 'windows':
+        hosts_file = r'C:\Windows\System32\drivers\etc\hosts'
+    else:
+        hosts_file = '/etc/hosts'
 
-                        file_content_to_write += line
+    with open(hosts_file, 'r') as f:
+        for line in f.readlines():
+            if(line.find('github.global.ssl.fastly.Net') > 0):
+                line = '%s github.global.ssl.fastly.Net ' % (new_ip) + '\n'
 
-        with open('/etc/hosts', 'r+') as f:
-                f.writelines(file_content_to_write)
+            file_content_to_write += line
+
+    with open(hosts_file, 'r+') as f:
+        f.writelines(file_content_to_write)
+
 
 def update_github_com_ip_in_dns_file(new_ip):
-        file_content_to_write = ''
+    file_content_to_write = ''
+    hosts_file = ''
 
-        with open('/etc/hosts', 'r') as f:
-                for line in f.readlines():
-                        if(line.find('http://github.com') > 0):
-                                line = '%s http://github.com' % (new_ip) + '\n'
+    if os_type == 'windows':
+        hosts_file = r'C:\Windows\System32\drivers\etc\hosts'
+    else:
+        hosts_file = '/etc/hosts'
 
-                        file_content_to_write += line
+    with open(hosts_file, 'r') as f:
+        for line in f.readlines():
+            if(line.find('github.com') > 0):
+                line = '%s github.com' % (new_ip) + '\n'
 
-        with open('/etc/hosts', 'r+') as f:
-                f.writelines(file_content_to_write)
+            file_content_to_write += line
+
+    with open(hosts_file, 'r+') as f:
+        f.writelines(file_content_to_write)
+
 
 def main():
-        github_fastly_net_ip = find_github_fastly_net_ip()
-        github_com_ip = find_github_com_ip()
+    github_fastly_net_ip = find_github_fastly_net_ip()
+    github_com_ip = find_github_com_ip()
 
-        update_github_fastly_net_ip_in_dns_file(github_fastly_net_ip)
-        update_github_com_ip_in_dns_file(github_com_ip)
+    update_github_fastly_net_ip_in_dns_file(github_fastly_net_ip)
+    update_github_com_ip_in_dns_file(github_com_ip)
 
+    if os_type == 'linux':
         os.system('/etc/init.d/networking restart')
 
+    else:
+        os.system('ipconfig /flushdns')
 
 
 def test():
-        pass
+    pass
+
 
 if __name__ == "__main__":
-        main()
+    main()
 
-        # test()  
+    # test()
